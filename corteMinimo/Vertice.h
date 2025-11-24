@@ -14,11 +14,10 @@ public:
 	void setPadre(T p);
 	T getPadre();
 
-	bool insertarL8(T destino);
+	bool insertarAdyacente(T elemento);
 	void mostrarLista();
 
-	Tripla<T>* getPrimerAdyacente();
-	Tripla<T>* getSiguienteAdyacente(Tripla<T>* actual);
+	Tripla<T>* getSacarAdyacenteAleatorio();
 private:
 	Lista8<T> lista;
 	T padre;
@@ -44,9 +43,9 @@ T Vertice<T>::getPadre()
 }
 
 template<typename T>
-bool Vertice<T>::insertarL8(T destino)
+bool Vertice<T>::insertarAdyacente(T elemento)
 {
-	return lista.InsertarFinal(destino);
+	return lista.InsertarFinal(elemento);
 }
 
 template<typename T>
@@ -55,14 +54,9 @@ void Vertice<T>::mostrarLista()
 	lista.Mostrar();
 }
 
-template<typename T>
-inline Tripla<T>* Vertice<T>::getPrimerAdyacente()
-{
-	return lista.getPrimer();
-}
 
 template<typename T>
-inline Tripla<T>* Vertice<T>::getSiguienteAdyacente(Tripla<T>* actual)
+inline Tripla<T>* Vertice<T>::getSacarAdyacenteAleatorio()
 {
-	return lista.SacarSiguienteAdyacente(actual);
+	return lista.sacarAdyacenteAleatorio();
 }

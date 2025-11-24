@@ -3,6 +3,8 @@
 #include <string>
 #include <fstream>
 #include <unordered_map>
+#include <vector>
+#include <cstdlib> 
 #include "Vertice.h"
 #define TAM 10
 using namespace std;
@@ -16,9 +18,11 @@ public:
     void insertarArista(T Na, T Nb);
     void mostrarGrafo();
     void leerArchivo(string nomarchivo);
-    int ContarAristas();
+    T elegirVerticeAleatorio();
+    T elegirAdyacenteAleatorio(T vertice);
 private:
     unordered_map<T, Vertice<T>> vertices;
+    vector<T> vertices_disponibles;
 };
 
 template<typename T>
@@ -33,7 +37,10 @@ inline Grafo<T>::~Grafo()
 template<typename T>
 inline void Grafo<T>::insertarArista(T Na, T Nb)
 {
-    vertices[Na].insertarL8(Nb);
+    if (vertices.find(Na) == vertices.end()) {
+        vertices_disponibles.push_back(Na);
+    }
+    vertices[Na].insertarAdyacente(Nb);
 }
 
 template<typename T>
@@ -52,29 +59,45 @@ inline void Grafo<T>::leerArchivo(string nomarchivo) {
         cout << "Error al abrir el archivo." << endl;
     }
     else {
-        string a, b;
-        int c;
-        while (archivo >> a >> b >> c) {
-            insertarArista(a, b, c);
+        string vertice;
+        
+        while (archivo >> vertice) {
+            T adyacente;
+            while (archivo>>adyacente) {
+                if (adyacente != "-1") {
+                    insertarArista(vertice, adyacente);
+                }
+                else {
+                    break;
+                }
+            }
         }
         archivo.close();
-        cout << " archivo abierto correctamente" << endl;
+        cout << " Archivo abierto correctamente" << endl;
     }
 }
 
 template<typename T>
-int Grafo<T>::ContarAristas() {
-    int A = 0;
-    for (auto& it : vertices) {
-        T origen = it.first;
-        Tripla<T>* ady = it.second.getPrimerAdyacente();
-        while (ady != nullptr) {
-            T destino = ady->getElem();
-            if (origen < destino) {
-                A++;
-            }
-            ady = ady->getSig();
-        }
-    }
-    return A;
+inline T Grafo<T>::elegirVerticeAleatorio()
+{
+    int i = rand() % vertices_disponibles.size();
+    return vertices_disponibles[i];
 }
+
+template<typename T>
+inline T  Grafo<T>::elegirAdyacenteAleatorio(T vertice)
+{
+    Tripla<T>* adyacente = vertices[vertice].getSacarAdyacenteAleatorio();
+    T resultado;
+    if (adyacente != nullptr) {
+        resultado=adyacente->getElem();
+    }
+    else {
+        resultado = nullptr;
+    }
+    return resultado;
+}
+
+
+
+

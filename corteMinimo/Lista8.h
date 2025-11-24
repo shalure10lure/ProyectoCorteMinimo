@@ -2,6 +2,7 @@
 #include <iostream>
 #include <string>
 #include "Tripla.h"
+#include <cstdlib> 
 
 using namespace std;
 
@@ -19,20 +20,20 @@ public:
 	bool BuscarRecursivo(T e, Tripla<T>* t);
 	bool buscarecursivoelemento(T e);
 
-	Tripla<T>* SacarSiguienteAdyacente(Tripla<T>* actual);
-	Tripla<T>* getPrimer();
+	Tripla<T>* sacarAdyacenteAleatorio();
+	int getSize();
 private:
 	Tripla<T>* Primer;
 	Tripla<T>* Ultimo;
+	int size;  // nuevo atributo
 };
-
-
 
 template<typename T>
 inline Lista8<T>::Lista8()
 {
 	Primer = nullptr;
 	Ultimo = nullptr;
+	size = 0;
 }
 
 template<typename T>
@@ -47,7 +48,7 @@ template<typename T>
 inline bool Lista8<T>::InsertarPrincipio(T e)
 {
 	bool resultado = true;
-	if (Primer == nullptr) {// verifica si la lista esta vacia
+	if (Primer == nullptr) {
 		Primer = new Tripla<T>(nullptr, e, nullptr);
 		Ultimo = Primer;
 	}
@@ -55,6 +56,7 @@ inline bool Lista8<T>::InsertarPrincipio(T e)
 		Primer = new Tripla<T>(nullptr, e,Primer);
 		Primer->getSig()->setAnt(Primer);
 	}
+	size++;
 	return resultado;
 }
 
@@ -70,6 +72,7 @@ inline bool Lista8<T>::InsertarFinal(T e)
 		Ultimo = new Tripla<T>(Ultimo, e,nullptr);
 		Ultimo->getAnt()->setSig(Ultimo);
 	}
+	size++;
 	return resultado;
 
 }
@@ -91,6 +94,7 @@ inline bool Lista8<T>::EliminarPrincipio()
 			delete Primer->getAnt();
 			Primer->setAnt(nullptr);
 		}
+		size--;
 	}
 	return resultado;
 }
@@ -112,6 +116,7 @@ inline bool Lista8<T>::EliminarFinal()
 			delete Ultimo->getSig();
 			Ultimo->setSig(nullptr);
 		}
+		size--;
 	}
 	return resultado;
 }
@@ -126,7 +131,7 @@ inline void Lista8<T>::Mostrar()
 		Tripla<T>* actual = Primer;
 		while (actual != nullptr) {
 			string letra = actual->getElem();
-			cout << "(" << letra << ", " << actual->getPeso() << ") ";
+			cout << "(" << letra << ") " ;
 			actual = actual->getSig();
 		}
 		cout << endl;
@@ -158,20 +163,21 @@ inline bool Lista8<T>::buscarecursivoelemento(T e)
 }
 
 template<typename T>
-inline Tripla<T>* Lista8<T>::SacarSiguienteAdyacente(Tripla<T>* actual)
+inline Tripla<T>* Lista8<T>::sacarAdyacenteAleatorio()
 {
-	Tripla<T>* res = actual;
-	if (res == nullptr) {
-		res = nullptr;
+	Tripla<T>* actual = Primer;
+	if (size != 0) {
+		int indice = rand() % size;
+		for (int i = 0;i < indice;i++) {
+			actual = actual->getSig();
+		}
 	}
-	else {
-		res = res->getSig();
-	}
-	return res;
+	return actual;
 }
 
+
 template<typename T>
-inline Tripla<T>* Lista8<T>::getPrimer()
+inline int Lista8<T>::getSize()
 {
-	return Primer;
+	return size;
 }
