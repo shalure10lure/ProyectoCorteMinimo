@@ -87,7 +87,6 @@ inline T Grafo<T>::elegirVerticeAleatorio()
 template<typename T>
 inline T  Grafo<T>::elegirAdyacenteAleatorio(T vertice)
 {
-    
     Tripla<T>* adyacente = vertices[vertice].getSacarAdyacenteAleatorio();
     T resultado;
     if (adyacente != nullptr) {
