@@ -14,7 +14,7 @@ public:
 	void setPadre(T p);
 	T getPadre();
 
-	bool insertarL8(T destino);
+	bool insertarAdyacente(T destino);
 	void mostrarLista();
 
 	Tripla<T>* getPrimerAdyacente();
@@ -44,7 +44,7 @@ T Vertice<T>::getPadre()
 }
 
 template<typename T>
-bool Vertice<T>::insertarL8(T destino)
+bool Vertice<T>::insertarAdyacente(T destino)
 {
 	return lista.InsertarFinal(destino);
 }
