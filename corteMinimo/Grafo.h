@@ -2,12 +2,20 @@
 #include <iostream>
 #include <string>
 #include <fstream>
+
 #include <unordered_map>
 #include <vector>
-#include <cstdlib> 
+#include <cstdlib>
+#include <ctime>
+#include <cmath>
 #include "Vertice.h"
-#define TAM 10
 using namespace std;
+
+// Función auxiliar para elegir un elemento aleatorio de un vector
+template<typename T>
+T elegirDeVector(vector<T>& vec) {
+    return vec[rand() % vec.size()];
+}
 
 template <typename T>
 class Grafo
@@ -19,160 +27,142 @@ public:
     void mostrarGrafo();
     void leerArchivo(string nomarchivo);
     T elegirVerticeAleatorio();
-    T elegirAdyacenteAleatorio(T vertice);
-	void contraerVertices(T v1, T v2);
-    pair<T, T> corteMinimo();
-    pair<T, T> corteMinimoRepetido();
+    void contraerVertices(T v1, T v2);
+
+    // Devuelve los dos vértices finales y la cantidad de aristas
+    int corteMinimo();
+    int corteMinimoRepetido();
+
 private:
     unordered_map<T, Vertice<T>> vertices;
     vector<T> vertices_disponibles;
 };
 
 template<typename T>
-inline Grafo<T>::Grafo()
-{
+inline Grafo<T>::Grafo() {
+    srand(time(nullptr));
 }
 
 template<typename T>
-inline Grafo<T>::~Grafo()
-{
-}
+inline Grafo<T>::~Grafo() {}
+
 template<typename T>
-inline void Grafo<T>::insertarArista(T Na, T Nb)
-{
+inline void Grafo<T>::insertarArista(T Na, T Nb) {
     if (vertices.find(Na) == vertices.end()) {
         vertices_disponibles.push_back(Na);
     }
+    if (vertices.find(Nb) == vertices.end()) {
+        vertices_disponibles.push_back(Nb);
+    }
     vertices[Na].insertarAdyacente(Nb);
+    vertices[Nb].insertarAdyacente(Na);
 }
 
 template<typename T>
-inline void Grafo<T>::mostrarGrafo()
-{
+inline void Grafo<T>::mostrarGrafo() {
     for (auto& it : vertices) {
         cout << it.first << " = ";
-        it.second.mostrarLista();
+        for (T u : it.second.getAdyacentes())
+            cout << u << " ";
+        cout << endl;
     }
 }
+
+#include <sstream>
 
 template<typename T>
 inline void Grafo<T>::leerArchivo(string nomarchivo) {
     ifstream archivo(nomarchivo);
     if (!archivo) {
         cout << "Error al abrir el archivo." << endl;
+        return;
     }
-    else {
-        string vertice;
-        
-        while (archivo >> vertice) {
-            T adyacente;
-            while (archivo>>adyacente) {
-                if (adyacente != "-1") {
-                    insertarArista(vertice, adyacente);
-                }
-                else {
-                    break;
-                }
+
+    string linea;
+    while (getline(archivo, linea)) {
+        istringstream iss(linea);
+        T vertice;
+        if (!(iss >> vertice)) continue;  // línea vacía
+
+        T adyacente;
+        while (iss >> adyacente) {
+            if constexpr (std::is_same<T, string>::value) {
+                if (adyacente == "-1") break;
             }
-        }
-        archivo.close();
-        cout << " Archivo abierto correctamente" << endl;
-    }
-}
-
-template<typename T>
-inline T Grafo<T>::elegirVerticeAleatorio()
-{
-    int i = rand() % vertices_disponibles.size();
-    return vertices_disponibles[i];
-}
-
-template<typename T>
-inline T  Grafo<T>::elegirAdyacenteAleatorio(T vertice)
-{
-    Tripla<T>* adyacente = vertices[vertice].getSacarAdyacenteAleatorio();
-    T resultado;
-    if (adyacente != nullptr) {
-        resultado=adyacente->getElem();
-    }
-    else {
-        resultado = nullptr;
-    }
-    return resultado;
-}
-
-
-
-
-
-template<typename T>
-void Grafo<T>::contraerVertices(T v1, T v2) {
-    // 1. Tomamos todas las adyacencias de v1 y las agregamos a v2
-    Tripla<T>* adyacente = vertices[v1].getPrimerAdyacente();
-    while (adyacente != nullptr) {
-        T elem = adyacente->getElem();
-        if (elem != v2) { // Evitar auto-ciclos
-            vertices[v2].insertarAdyacente(elem);
-        }
-        adyacente = adyacente->getSig();
-    }
-
-    for (auto& it : vertices) {
-        Tripla<T>* actual = it.second.getPrimerAdyacente();
-        while (actual != nullptr) {
-            if (actual->getElem() == v1) {
-                actual->setElem(v2); // Cambiamos la referencia al nuevo vértice
+            else {
+                if (adyacente == -1) break;
             }
-            actual = actual->getSig();
+            insertarArista(vertice, adyacente);
         }
     }
 
-    vertices.erase(v1);
+    archivo.close();
+    cout << "Archivo abierto correctamente" << endl;
+}
 
-    // 4. Actualizamos la lista de vértices disponibles
-    vertices_disponibles.clear();
-    for (auto& it : vertices) {
-        vertices_disponibles.push_back(it.first);
-    }
+
+template<typename T>
+inline T Grafo<T>::elegirVerticeAleatorio() {
+    return elegirDeVector(vertices_disponibles);
 }
 template<typename T>
-pair<T, T> Grafo<T>::corteMinimo() {
-    Grafo<T> copia = *this; // Hacemos una copia para no modificar el original
+inline int Grafo<T>::corteMinimo() {
+    if (vertices.size() <= 1) return 0;
 
-    while (copia.vertices.size() > 2) {
-        T v1 = copia.elegirVerticeAleatorio();
-        T v2 = copia.elegirAdyacenteAleatorio(v1);
-        copia.contraerVertices(v1, v2);
+    // Copia de adyacencias
+    unordered_map<T, vector<T>> adyCopy;
+    vector<T> vertsDisponibles;
+    for (auto& v : vertices) {
+        vertsDisponibles.push_back(v.first);
+        adyCopy[v.first] = v.second.getAdyacentes();
     }
 
-    auto it = copia.vertices.begin();
-    T vert1 = it->first;
-    it++;
-    T vert2 = it->first;
-    return { vert1, vert2 };
+    while (vertsDisponibles.size() > 2) {
+        T v1 = elegirDeVector(vertsDisponibles);
+        vector<T>& adys = adyCopy[v1];
+        if (adys.empty()) continue;
+
+        T v2 = elegirDeVector(adys);
+        if (v1 == v2) continue;
+
+        // Fusionar adyacencias
+        for (T u : adys) {
+            if (u != v2) adyCopy[v2].push_back(u);
+        }
+
+        // Reemplazar referencias
+        for (auto& p : adyCopy)
+            for (T& u : p.second)
+                if (u == v1) u = v2;
+
+        // Eliminar auto-aristas
+        adyCopy[v2].erase(remove(adyCopy[v2].begin(), adyCopy[v2].end(), v2), adyCopy[v2].end());
+
+        // Borrar vértice
+        adyCopy.erase(v1);
+        vertsDisponibles.erase(remove(vertsDisponibles.begin(), vertsDisponibles.end(), v1), vertsDisponibles.end());
+    }
+
+    // Contar aristas entre los dos vértices finales
+    T vA = vertsDisponibles[0];
+    T vB = vertsDisponibles[1];
+    int contador = 0;
+    for (T u : adyCopy[vA])
+        if (u == vB) contador++;
+
+    return contador;
 }
 template<typename T>
-pair<T, T> Grafo<T>::corteMinimoRepetido() {
+inline int Grafo<T>::corteMinimoRepetido() {
     int N = vertices.size();
-    int iteraciones = N * N * log(N); // según teoría de Karger
-    int minCorte = INT_MAX;
-    pair<T, T> mejorCorte;
+    int iteraciones = max(1, (int)(N * N * log(N)));
+    int minAristas = INT_MAX;
 
     for (int i = 0; i < iteraciones; i++) {
-        auto corte = corteMinimo();
-
-        // Contamos cuántas aristas hay entre estos dos vértices
-        int contador = 0;
-        for (Tripla<T>* ady = vertices[corte.first].getSacarAdyacenteAleatorio(); ady != nullptr; ady = ady->getSig()) {
-            if (ady->getElem() == corte.second)
-                contador++;
-        }
-
-        if (contador < minCorte) {
-            minCorte = contador;
-            mejorCorte = corte;
-        }
+        int corte = corteMinimo();
+        if (corte < minAristas) minAristas = corte;
     }
 
-    return mejorCorte;
+    return minAristas;
 }
+

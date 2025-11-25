@@ -14,13 +14,13 @@ public:
 	void setPadre(T p);
 	T getPadre();
 
-	bool insertarAdyacente(T elemento);
-	void mostrarLista();
+	void insertarAdyacente(T elemento);
+	void mostrarAdyacentes();
 
-	Tripla<T>* getSacarAdyacenteAleatorio();
-	Tripla<T>* getPrimerAdyacente();
+	T SacarAdyacenteAleatorio();
+	vector<T>& getAdyacentes();
 private:
-	Lista8<T> lista;
+	vector<T> adyacentes;
 	T padre;
 };
 template<typename T>
@@ -44,24 +44,30 @@ T Vertice<T>::getPadre()
 }
 
 template<typename T>
-bool Vertice<T>::insertarAdyacente(T elemento)
+inline void Vertice<T>::insertarAdyacente(T elemento)
 {
-	return lista.InsertarFinal(elemento);
+	adyacentes.push_back(elemento);
 }
 
 template<typename T>
-void Vertice<T>::mostrarLista()
+inline void Vertice<T>::mostrarAdyacentes()
 {
-	lista.Mostrar();
+	for (T v : adyacentes) cout << v << " ";
+	cout << endl;
+}
+
+template<typename T>
+inline T Vertice<T>::SacarAdyacenteAleatorio()
+{
+	if (adyacentes.empty()) return T();
+	return adyacentes[rand() % adyacentes.size()];
+}
+
+template<typename T>
+inline vector<T>& Vertice<T>::getAdyacentes()
+{
+	return adyacentes;
 }
 
 
-template<typename T>
-inline Tripla<T>* Vertice<T>::getSacarAdyacenteAleatorio()
-{
-	return lista.sacarAdyacenteAleatorio();
-}
-template<typename T>
-Tripla<T>* Vertice<T>::getPrimerAdyacente() {
-	return lista.getPrimer();
-}
+

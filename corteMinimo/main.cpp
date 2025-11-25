@@ -1,24 +1,27 @@
-
 #include <iostream>
+#include <chrono>
 #include "Grafo.h"
 using namespace std;
+using namespace std::chrono;
 
-int main()
-{
-    srand(static_cast<unsigned int>(time(NULL)));
+int main() {
+    Grafo<int> g;
 
-	Grafo<string> grafo;
-    grafo.leerArchivo("grafo.txt");
-    //grafo.mostrarGrafo();
-    /*
-    for (int i = 0; i < 1000; i++) {
-        string v = miGrafo.elegirVerticeAleatorio();
-        string u = miGrafo.elegirAdyacenteAleatorio(v);
-        cout << "Vertice: " << v << " -> Adyacente : " << u << endl;
-    }*/
+    g.leerArchivo("grafo.txt");
 
-    auto corte = grafo.corteMinimoRepetido();
-    cout << "Corte mínimo entre: " << corte.first << " y " << corte.second << endl;
+    auto inicio = high_resolution_clock::now();  // tiempo inicial
 
+    int resultado = g.corteMinimoRepetido();    // llamada a la función
+
+    auto fin = high_resolution_clock::now();     // tiempo final
+
+    // Diferencia en milisegundos
+    auto duracion = duration_cast<milliseconds>(fin - inicio).count();
+
+    cout << "Corte mínimo entre "
+        << resultado<< " aristas" << endl;
+
+    cout << "Tiempo de ejecución: " << duracion << " ms" << endl;
+
+    return 0;
 }
-
