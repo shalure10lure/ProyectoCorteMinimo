@@ -2,7 +2,7 @@
 #include <chrono>
 #include "Grafo.h"
 using namespace std;
-using namespace std::chrono;
+using namespace chrono;
 
 int main() {
     Grafo<int> g;
@@ -18,9 +18,7 @@ int main() {
     // Diferencia en milisegundos
     auto duracion = duration_cast<milliseconds>(fin - inicio).count();
 
-    cout << "Corte mínimo entre "
-        << resultado<< " aristas" << endl;
-
+    cout << "Corte mínimo entre " << resultado<< " aristas" << endl;
     cout << "Tiempo de ejecución: " << duracion << " ms" << endl;
 
     return 0;

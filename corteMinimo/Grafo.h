@@ -2,7 +2,7 @@
 #include <iostream>
 #include <string>
 #include <fstream>
-
+#include <random> 
 #include <unordered_map>
 #include <vector>
 #include <cstdlib>
@@ -10,11 +10,26 @@
 #include <cmath>
 #include "Vertice.h"
 using namespace std;
-
-// Función auxiliar para elegir un elemento aleatorio de un vector
+class UnionFind {
+    vector<int> parent, rank;
+public:
+    UnionFind(int n) : parent(n), rank(n, 0) {
+        for (int i = 0; i < n; i++) parent[i] = i;
+    }
+    int find(int x) { return (parent[x] == x) ? x : (parent[x] = find(parent[x])); }
+    void unite(int x, int y) {
+        int a = find(x), b = find(y);
+        if (a == b) return;
+        if (rank[a] < rank[b]) parent[a] = b;
+        else { parent[b] = a; if (rank[a] == rank[b]) rank[a]++; }
+    }
+};
+// Función auxiliar para elegir un elemento aleatorio
 template<typename T>
 T elegirDeVector(vector<T>& vec) {
-    return vec[rand() % vec.size()];
+    static mt19937 rng(random_device{}());
+    uniform_int_distribution<int> dist(0, vec.size() - 1);
+    return vec[dist(rng)];
 }
 
 template <typename T>
@@ -26,11 +41,11 @@ public:
     void insertarArista(T Na, T Nb);
     void mostrarGrafo();
     void leerArchivo(string nomarchivo);
-    T elegirVerticeAleatorio();
-    void contraerVertices(T v1, T v2);
+    //T elegirVerticeAleatorio();
+    //void contraerVertices(T v1, T v2);
 
     // Devuelve los dos vértices finales y la cantidad de aristas
-    int corteMinimo();
+    int corteMinimoRapido();
     int corteMinimoRepetido();
 
 private:
@@ -56,6 +71,7 @@ inline void Grafo<T>::insertarArista(T Na, T Nb) {
     }
     vertices[Na].insertarAdyacente(Nb);
     vertices[Nb].insertarAdyacente(Na);
+    cout << "Insertada arista: " << Na << " - " << Nb << endl;
 }
 
 template<typename T>
@@ -99,70 +115,65 @@ inline void Grafo<T>::leerArchivo(string nomarchivo) {
     archivo.close();
     cout << "Archivo abierto correctamente" << endl;
 }
-
-
 template<typename T>
-inline T Grafo<T>::elegirVerticeAleatorio() {
-    return elegirDeVector(vertices_disponibles);
-}
-template<typename T>
-inline int Grafo<T>::corteMinimo() {
-    if (vertices.size() <= 1) return 0;
+int Grafo<T>::corteMinimoRapido() {
+    int N = vertices_disponibles.size();
+    if (N < 2) return 0;
 
-    // Copia de adyacencias
-    unordered_map<T, vector<T>> adyCopy;
-    vector<T> vertsDisponibles;
-    for (auto& v : vertices) {
-        vertsDisponibles.push_back(v.first);
-        adyCopy[v.first] = v.second.getAdyacentes();
-    }
+    // Mapear vértices a índices 0..N-1
+    unordered_map<T, int> indexMap;
+    for (int i = 0; i < vertices_disponibles.size(); i++)
+        indexMap[vertices_disponibles[i]] = i;
 
-    while (vertsDisponibles.size() > 2) {
-        T v1 = elegirDeVector(vertsDisponibles);
-        vector<T>& adys = adyCopy[v1];
-        if (adys.empty()) continue;
-
-        T v2 = elegirDeVector(adys);
-        if (v1 == v2) continue;
-
-        // Fusionar adyacencias
-        for (T u : adys) {
-            if (u != v2) adyCopy[v2].push_back(u);
+    // Generar lista de aristas
+    vector<pair<int, int>> edges;
+    for (auto& p : vertices) {
+        int u = indexMap[p.first];
+        for (T vT : p.second.getAdyacentes()) {
+            int v = indexMap[vT];
+            if (u < v) edges.push_back({ u,v }); // evitar duplicados
         }
-
-        // Reemplazar referencias
-        for (auto& p : adyCopy)
-            for (T& u : p.second)
-                if (u == v1) u = v2;
-
-        // Eliminar auto-aristas
-        adyCopy[v2].erase(remove(adyCopy[v2].begin(), adyCopy[v2].end(), v2), adyCopy[v2].end());
-
-        // Borrar vértice
-        adyCopy.erase(v1);
-        vertsDisponibles.erase(remove(vertsDisponibles.begin(), vertsDisponibles.end(), v1), vertsDisponibles.end());
     }
 
-    // Contar aristas entre los dos vértices finales
-    T vA = vertsDisponibles[0];
-    T vB = vertsDisponibles[1];
-    int contador = 0;
-    for (T u : adyCopy[vA])
-        if (u == vB) contador++;
+    if (edges.empty()) return 0;
 
-    return contador;
+    // Union-Find
+    UnionFind uf(N);
+    int comp = N;
+
+    static mt19937 rng(static_cast<unsigned int>(time(nullptr)));
+    uniform_int_distribution<size_t> dist(0, edges.size() - 1);
+
+    while (comp > 2) {
+        auto e = edges[dist(rng)];
+        int a = uf.find(e.first);
+        int b = uf.find(e.second);
+        if (a != b) {
+            uf.unite(a, b);
+            comp--;
+        }
+    }
+
+    // Contar aristas cruzadas
+    int corte = 0;
+    for (auto& e : edges)
+        if (uf.find(e.first) != uf.find(e.second))
+            corte++;
+
+    return corte;
 }
+
+
+// ===== Repetido varias veces =====
 template<typename T>
-inline int Grafo<T>::corteMinimoRepetido() {
-    int N = vertices.size();
-    int iteraciones = max(1, (int)(N * N * log(N)));
-    int minAristas = INT_MAX;
+int Grafo<T>::corteMinimoRepetido() {
+    int N = vertices_disponibles.size();
+    int iter = max(30, (int)(N * N * log(max(2, N))));
+    int mejor = numeric_limits<int>::max();
 
-    for (int i = 0; i < iteraciones; i++) {
-        int corte = corteMinimo();
-        if (corte < minAristas) minAristas = corte;
+    for (int i = 0;i < iter;i++) {
+        int c = corteMinimoRapido();
+        if (c < mejor) mejor = c;
     }
-
-    return minAristas;
+    return mejor;
 }
-
