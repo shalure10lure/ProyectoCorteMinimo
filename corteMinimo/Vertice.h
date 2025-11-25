@@ -17,7 +17,7 @@ public:
 	void insertarAdyacente(T elemento);
 	void mostrarAdyacentes();
 
-	T SacarAdyacenteAleatorio();
+	T AdyacenteAleatorio();
 	vector<T>& getAdyacentes();
 private:
 	vector<T> adyacentes;
@@ -57,7 +57,7 @@ inline void Vertice<T>::mostrarAdyacentes()
 }
 
 template<typename T>
-inline T Vertice<T>::SacarAdyacenteAleatorio()
+inline T Vertice<T>::AdyacenteAleatorio()
 {
 	if (adyacentes.empty()) return T();
 	return adyacentes[rand() % adyacentes.size()];

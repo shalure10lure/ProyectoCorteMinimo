@@ -5,9 +5,10 @@ using namespace std;
 using namespace chrono;
 
 int main() {
-    Grafo<int> g;
+    Grafo<string> g;
 
-    g.leerArchivo("grafo.txt");
+    g.leerArchivo("grande.txt");
+    g.mostrarGrafo();
 
     auto inicio = high_resolution_clock::now();  // tiempo inicial
 
@@ -20,6 +21,6 @@ int main() {
 
     cout << "Corte mínimo entre " << resultado<< " aristas" << endl;
     cout << "Tiempo de ejecución: " << duracion << " ms" << endl;
-
+    
     return 0;
 }
