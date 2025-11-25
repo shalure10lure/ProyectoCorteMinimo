@@ -15,9 +15,6 @@
 
 using namespace std;
 
-/* ============================
-   UNION-FIND
-============================ */
 class UnionFind {
 public:
     vector<int> parent, size;
@@ -44,9 +41,6 @@ public:
     }
 };
 
-/* ============================
-      GRAFO TEMPLATE
-============================ */
 template <typename T>
 class Grafo {
 public:
@@ -95,9 +89,6 @@ inline void Grafo<T>::mostrarGrafo()
     }
 }
 
-/* ============================
-        LEER ARCHIVO
-============================ */
 template<typename T>
 inline void Grafo<T>::leerArchivo(string nomarchivo)
 {
@@ -152,10 +143,6 @@ inline void Grafo<T>::leerArchivo(string nomarchivo)
     cout << "Grafo cargado: V=" << N << " E=" << edges.size() << endl;
 }
 
-
-/* ============================
-   KARGER RÁPIDO UNA VEZ
-============================ */
 template<typename T>
 int Grafo<T>::corteMinimoRapido()
 {
@@ -188,10 +175,6 @@ int Grafo<T>::corteMinimoRapido()
     return corte;
 }
 
-
-/* ============================
-   REPETIDO K VECES
-============================ */
 template<typename T>
 int Grafo<T>::corteMinimoRepetido()
 {
