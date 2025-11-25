@@ -133,6 +133,7 @@
   </ItemGroup>
   <ItemGroup>
     <Text Include="grafo.txt" />
+    <Text Include="grande.txt" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

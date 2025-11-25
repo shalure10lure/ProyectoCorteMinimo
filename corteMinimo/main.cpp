@@ -5,15 +5,20 @@ using namespace std;
 
 int main()
 {
-    srand(time(NULL));
+    srand(static_cast<unsigned int>(time(NULL)));
 
-	Grafo<string> miGrafo;
-    miGrafo.leerArchivo("grafo.txt");
-    miGrafo.mostrarGrafo();
-    for (int i = 0; i < 100; i++) {
+	Grafo<string> grafo;
+    grafo.leerArchivo("grafo.txt");
+    //grafo.mostrarGrafo();
+    /*
+    for (int i = 0; i < 1000; i++) {
         string v = miGrafo.elegirVerticeAleatorio();
         string u = miGrafo.elegirAdyacenteAleatorio(v);
         cout << "Vertice: " << v << " -> Adyacente : " << u << endl;
-    }
+    }*/
+
+    auto corte = grafo.corteMinimoRepetido();
+    cout << "Corte mínimo entre: " << corte.first << " y " << corte.second << endl;
+
 }
 

@@ -18,6 +18,7 @@ public:
 	void mostrarLista();
 
 	Tripla<T>* getSacarAdyacenteAleatorio();
+	Tripla<T>* getPrimerAdyacente();
 private:
 	Lista8<T> lista;
 	T padre;
@@ -59,4 +60,8 @@ template<typename T>
 inline Tripla<T>* Vertice<T>::getSacarAdyacenteAleatorio()
 {
 	return lista.sacarAdyacenteAleatorio();
+}
+template<typename T>
+Tripla<T>* Vertice<T>::getPrimerAdyacente() {
+	return lista.getPrimer();
 }

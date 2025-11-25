@@ -19,13 +19,15 @@ public:
 	void Mostrar();
 	bool BuscarRecursivo(T e, Tripla<T>* t);
 	bool buscarecursivoelemento(T e);
-
+	bool EliminarDado(T e);
 	Tripla<T>* sacarAdyacenteAleatorio();
 	int getSize();
+	Tripla<T>* getPrimer();
+
 private:
 	Tripla<T>* Primer;
 	Tripla<T>* Ultimo;
-	int size;  // nuevo atributo
+	int size;  
 };
 
 template<typename T>
@@ -81,11 +83,11 @@ template<typename T>
 inline bool Lista8<T>::EliminarPrincipio()
 {
 	bool resultado = true;
-	if (Primer == nullptr) {// lista vacia
+	if (Primer == nullptr) {
 		resultado = false;
 	}
 	else {
-		if (Primer == Ultimo) { //verifica si hay un elemento 
+		if (Primer == Ultimo) { 
 			delete Primer;
 			Primer = Ultimo = nullptr;
 		}
@@ -104,7 +106,7 @@ inline bool Lista8<T>::EliminarFinal()
 {
 	bool resultado = true;
 	if (Ultimo == nullptr) {
-		resultado = false; // lista vacía
+		resultado = false;
 	}
 	else {
 		if (Primer == Ultimo) {
@@ -180,4 +182,58 @@ template<typename T>
 inline int Lista8<T>::getSize()
 {
 	return size;
+}
+template<typename T>
+Tripla<T>* Lista8<T>::getPrimer() {
+	return Primer;
+}
+
+
+template<typename T>
+inline bool Lista8<T>::EliminarDado(T e)
+{
+	bool respuesta = true;
+
+	if (Primer == nullptr) {
+		respuesta = false;
+	}
+	else {
+		if (Primer == Ultimo) {
+			if (e == Primer->getElem()) {
+				delete Primer;
+				Primer = Ultimo = nullptr;
+			}
+			else {
+				respuesta = false;
+			}
+		}
+		else {
+			Tripla<T>* aux = Primer;
+			while (aux != Ultimo && aux->getElem() != e) {
+				aux = aux->getSig();
+			}
+			if (aux->getElem() == e) {
+				//Controlar si no es primero ni ultimo
+				if (aux->getAnt() == nullptr) {
+					EliminarPrincipio();
+				}
+				else {
+					if (aux->getSig() == nullptr) {
+						EliminarFinal();
+					}
+					else {//si esta en el medio se borra y el anterior le ponemos el valor del siguiente, y al diguiente del anterior
+						Tripla<T>* anterior = aux->getAnt();
+						Tripla<T>* siguiente = aux->getSig();
+						anterior->setSig(siguiente);
+						siguiente->setAnt(anterior);
+						delete aux;
+					}
+				}
+			}
+			else {
+				respuesta = false;
+			}
+		}
+	}
+	return respuesta;
 }

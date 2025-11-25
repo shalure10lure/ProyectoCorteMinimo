@@ -35,5 +35,6 @@
   </ItemGroup>
   <ItemGroup>
     <Text Include="grafo.txt" />
+    <Text Include="grande.txt" />
   </ItemGroup>
 </Project>
