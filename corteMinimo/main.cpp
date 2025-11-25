@@ -12,7 +12,7 @@ int main() {
 
     auto inicio = high_resolution_clock::now();  // tiempo inicial
 
-    int resultado = g.kargerMinCut();    // llamada a la función
+    int resultado = g.corteMinimoRepetido();    // llamada a la función
 
     auto fin = high_resolution_clock::now();     // tiempo final
 

@@ -1,86 +1,66 @@
 ﻿#pragma once
-#include "Vertice.h"
+#include <iostream>
+#include <string>
+#include <fstream>
+#include <random> 
 #include <unordered_map>
 #include <vector>
-#include <string>
-#include <algorithm>
 #include <cstdlib>
 #include <ctime>
-#include <iostream>
-#include <fstream>
-#include <sstream>
 #include <cmath>
-
+#include "Vertice.h"
 using namespace std;
 
 template <typename T>
-struct Arista {
-    T u, v;
-    Arista(T _u, T _v) : u(_u), v(_v) {}
-};
-
-template <typename T>
-class Grafo {
-private:
-    unordered_map<T, Vertice<T>> G;
-    vector<Arista<T>> aristas_activas;
-
-    bool eliminarAristaO1(int indice);
-    void contraerArista(T u_id, T v_id);
-
+class Grafo
+{
 public:
-    Grafo() { srand(time(NULL)); }
-
-    bool insertarArista(T u, T v);
-    void seleccionarAristaAleatoria(T& u, T& v);
-    int kargerContraccion();
-    int kargerMinCut();
+    Grafo();
+    ~Grafo();
+    void insertarArista(T Na, T Nb);
     void mostrarGrafo();
-    void leerArchivo(string nombreArchivo);
+    void leerArchivo(string nomarchivo);
+    T elegirDeVector( vector<T>& vec);
+    void funcionazar();
+    int corteMinimoRapido();
+    int corteMinimoRepetido();
+
+private:
+    unordered_map<T, Vertice<T>> vertices;
+    vector<T> vertices_disponibles;
 };
 
-template <typename T>
-bool Grafo<T>::insertarArista(T u, T v) {
-    if (u == v) return false;
-
-    G[u].getLista().InsertarFinal(v);
-
-    aristas_activas.push_back(Arista<T>(u, v));
-    return true;
+template<typename T>
+inline Grafo<T>::Grafo() {
+    srand(time(nullptr));
 }
 
-template <typename T>
-bool Grafo<T>::eliminarAristaO1(int indice) {
-    if (indice < 0 || indice >= (int)aristas_activas.size())
-        return false;
+template<typename T>
+inline Grafo<T>::~Grafo() {}
 
-    if (indice != aristas_activas.size() - 1)
-        swap(aristas_activas[indice], aristas_activas.back());
+template<typename T>
+inline void Grafo<T>::insertarArista(T Na, T Nb) {
+    vertices[Na].insertarAdyacente(Nb);
 
-    aristas_activas.pop_back();
-    return true;
+    if (find(vertices_disponibles.begin(), vertices_disponibles.end(), Na) == vertices_disponibles.end()) {
+        vertices_disponibles.push_back(Na);
+    }
 }
 
-template <typename T>
-void Grafo<T>::seleccionarAristaAleatoria(T& u, T& v) {
-    if (aristas_activas.empty()) return;
-
-    int pos = rand() % aristas_activas.size();
-
-    u = aristas_activas[pos].u;
-    v = aristas_activas[pos].v;
-}
 template<typename T>
 inline void Grafo<T>::mostrarGrafo() {
-    if (G.empty()) {
+    if (vertices.empty()) {
         cout << "El grafo está vacío." << endl;
         return;
     }
-    for (auto& it : G) {
+    for (auto& it : vertices) {
         cout << it.first << " = ";
-        it.second.getLista().Mostrar();
+        for (T u : it.second.getAdyacentes())
+            cout << u << " ";
+        cout << endl;
     }
 }
+
 template<typename T>
 inline void Grafo<T>::leerArchivo(string nomarchivo) {
     ifstream archivo(nomarchivo);
@@ -93,7 +73,7 @@ inline void Grafo<T>::leerArchivo(string nomarchivo) {
         while (archivo >> vertice) {
             T adyacente;
             while (archivo >> adyacente && adyacente != T("-1")) {
-                insertarArista(vertice, adyacente);
+                insertarArista(vertice, adyacente);     
             }
         }
         archivo.close();
@@ -102,65 +82,90 @@ inline void Grafo<T>::leerArchivo(string nomarchivo) {
 }
 
 template<typename T>
-void Grafo<T>::contraerArista(T u_id, T v_id) {
-    auto& u_lista = G[u_id].getLista();
-    auto& v_lista = G[v_id].getLista();
+T Grafo<T>::elegirDeVector( vector<T>& vec) {
+    T resultado = T();
 
-    // Mover adyacentes de v a u
-    Tripla<T>* aux = v_lista.getPrimer();
-    while (aux) {
-        if (aux->getElem() != u_id) { // Evitar loop
-            u_lista.InsertarFinal(aux->getElem());
-        }
-        aux = aux->getSig();
+    if (!vec.empty()) {
+        static std::mt19937 rng(std::random_device{}());
+        std::uniform_int_distribution<int> dist(0, vec.size() - 1);
+        int  indice = dist(rng);
+        resultado = vec[indice];
     }
-
-    // Reemplazar todas las apariciones de v en otros vértices por u
-    for (auto& par : G) {
-        Tripla<T>* t = par.second.getLista().getPrimer();
-        while (t) {
-            if (t->getElem() == v_id) t->getElem() = u_id;
-            t = t->getSig();
-        }
-    }
+    return resultado;
 }
 
 template<typename T>
-int Grafo<T>::kargerContraccion() {
-    while (G.size() > 2) {
-        T u, v;
-        seleccionarAristaAleatoria(u, v);
-        contraerArista(u, v);
+inline void Grafo<T>::funcionazar()
+{
+    T v1 = elegirDeVector(vertices_disponibles);
+    T v2 = elegirDeVector(v1);
+    cout << "azar v1: " << v1 << " --> azar v2 : "<<endl;
+}
 
-        // Eliminar v del grafo
-        G.erase(v);
+template<typename T>
+int Grafo<T>::corteMinimoRapido() {
+    // --- 1️⃣ Copiamos el grafo original ---
+    unordered_map<T, Vertice<T>> copia_vertices = vertices;
+    vector<T> copia_lista = vertices_disponibles;
+    // --- 2️⃣ Mientras queden más de 2 vértices ---
+    while (copia_lista.size() > 2) {
+        // Elegir v1 aleatorio
+        T v1 = elegirDeVector(copia_lista);
 
-        // Eliminar la arista seleccionada
-        for (int i = (int)aristas_activas.size() - 1; i >= 0; --i) {
-            if ((aristas_activas[i].u == u && aristas_activas[i].v == v) ||
-                (aristas_activas[i].u == v && aristas_activas[i].v == u)) {
-                eliminarAristaO1(i);
+        auto& ady_v1 = copia_vertices[v1].getAdyacentes();
+        if (ady_v1.empty()) {
+            // v1 sin adyacentes, intentar otro vértice
+            continue;
+        }
+        // Elegir v2 aleatorio entre los adyacentes
+        T v2 = elegirDeVector(ady_v1);
+
+        if (v1 == v2 || copia_vertices.find(v2) == copia_vertices.end()) {
+            continue; // self-loop o v2 ya eliminado
+        }
+        // --- 3️⃣ CONTRACCIÓN: mover todos los adyacentes de v2 a v1 ---
+        auto& ady_v2 = copia_vertices[v2].getAdyacentes();
+        for (T vecino : ady_v2) {
+            if (vecino != v1) {
+                copia_vertices[v1].insertarAdyacente(vecino);
             }
         }
+        // --- 4️⃣ Reemplazar v2 por v1 en todos los adyacentes ---
+        for (auto& par : copia_vertices) {
+            auto& ady = par.second.getAdyacentes();
+            for (T& x : ady) {
+                if (x == v2) x = v1;
+            }
+        }
+        // --- 5️⃣ Eliminar self-loops de v1 ---
+        auto& ady_final_v1 = copia_vertices[v1].getAdyacentes();
+        ady_final_v1.erase(remove(ady_final_v1.begin(), ady_final_v1.end(), v1), ady_final_v1.end());
+        // --- 6️⃣ Eliminar v2 del grafo y de la lista ---
+        copia_vertices.erase(v2);
+        copia_lista.erase(remove(copia_lista.begin(), copia_lista.end(), v2), copia_lista.end());
+    }
+    T a = copia_lista[0];
+    T b = copia_lista[1];
+    // --- 8️⃣ Contar aristas entre los 2 vértices finales ---
+    int corte = 0;
+    for (T x : copia_vertices[a].getAdyacentes()) {
+        if (x == b) corte++;
     }
 
-    // Contar aristas entre los dos vértices finales
-    auto it = G.begin();
-    Tripla<T>* aux = it->second.getLista().getPrimer();
-    int count = 0;
-    while (aux) { count++; aux = aux->getSig(); }
-    return count;
+    return corte;
 }
 
 template<typename T>
-int Grafo<T>::kargerMinCut() {
-    int N = max(30, (int)(G.size() * G.size() * log(max(2, (int)G.size()))));
-    int best = INT_MAX;
-    for (int i = 0; i < N; i++) {
-        // Debes crear una copia del grafo y aristas_activas para cada iteración
-        Grafo<T> copia = *this;
-        int c = copia.kargerContraccion();
-        if (c < best) best = c;
+int Grafo<T>::corteMinimoRepetido() {
+    int N = vertices_disponibles.size();
+    int iter = max(30, (int)(N * N * log(max(2, N))));
+    int mejor = numeric_limits<int>::max();
+
+    for (int i = 0;i < iter;i++) {
+        int c = corteMinimoRapido();
+        if (c < mejor) {
+            mejor = c;
+        } 
     }
-    return best;
+    return mejor;
 }

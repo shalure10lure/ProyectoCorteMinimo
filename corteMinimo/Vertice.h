@@ -11,17 +11,14 @@ class Vertice
 public:
 	Vertice();
 	~Vertice();
-	void setPadre(T p);
-	T getPadre();
 
 	void insertarAdyacente(T elemento);
 	void mostrarAdyacentes();
 
 	T AdyacenteAleatorio();
-	Lista8<T>& getLista();
+	vector<T>& getAdyacentes();
 private:
-	Lista8<T> adyacentes;
-	T padre;
+	vector<T> adyacentes;
 };
 template<typename T>
 Vertice<T>::Vertice()
@@ -31,17 +28,7 @@ template<typename T>
 Vertice<T>::~Vertice()
 {}
 
-template<typename T>
-void Vertice<T>::setPadre(T p)
-{
-	padre = p;
-}
 
-template<typename T>
-T Vertice<T>::getPadre()
-{
-	return padre;
-}
 
 template<typename T>
 inline void Vertice<T>::insertarAdyacente(T elemento)
@@ -64,10 +51,10 @@ inline T Vertice<T>::AdyacenteAleatorio()
 }
 
 template<typename T>
-Lista8<T>& Vertice<T>::getLista() {
+inline vector<T>& Vertice<T>::getAdyacentes()
+{
 	return adyacentes;
 }
-
 
 
 
