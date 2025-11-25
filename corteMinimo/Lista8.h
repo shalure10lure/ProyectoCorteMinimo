@@ -82,46 +82,48 @@ inline bool Lista8<T>::InsertarFinal(T e)
 template<typename T>
 inline bool Lista8<T>::EliminarPrincipio()
 {
-	bool resultado = true;
 	if (Primer == nullptr) {
-		resultado = false;
+		return false; // lista vacía
+	}
+
+	Tripla<T>* aEliminar = Primer;
+
+	if (Primer == Ultimo) {
+		// Solo hay un nodo
+		Primer = Ultimo = nullptr;
 	}
 	else {
-		if (Primer == Ultimo) { 
-			delete Primer;
-			Primer = Ultimo = nullptr;
-		}
-		else {
-			Primer = Primer->getSig();
-			delete Primer->getAnt();
-			Primer->setAnt(nullptr);
-		}
-		size--;
+		// Más de un nodo
+		Primer = Primer->getSig();
+		Primer->setAnt(nullptr);
 	}
-	return resultado;
+
+	delete aEliminar;
+	size--;
+	return true;
 }
 
 template<typename T>
 inline bool Lista8<T>::EliminarFinal()
 {
-	bool resultado = true;
-	if (Ultimo == nullptr) {
-		resultado = false;
+	if (Ultimo == nullptr) return false; // lista vacía
+
+	Tripla<T>* aEliminar = Ultimo;
+
+	if (Primer == Ultimo) {
+		// Solo hay un nodo
+		Primer = Ultimo = nullptr;
 	}
 	else {
-		if (Primer == Ultimo) {
-			delete Ultimo;
-			Primer = Ultimo = nullptr;
-		}
-		else {
-			Ultimo = Ultimo->getAnt();
-			delete Ultimo->getSig();
-			Ultimo->setSig(nullptr);
-		}
-		size--;
+		Ultimo = Ultimo->getAnt();
+		Ultimo->setSig(nullptr);
 	}
-	return resultado;
+
+	delete aEliminar;
+	size--;
+	return true;
 }
+
 
 template<typename T>
 inline void Lista8<T>::Mostrar()
@@ -188,52 +190,30 @@ Tripla<T>* Lista8<T>::getPrimer() {
 	return Primer;
 }
 
-
 template<typename T>
 inline bool Lista8<T>::EliminarDado(T e)
 {
-	bool respuesta = true;
+	Tripla<T>* actual = Primer;
 
-	if (Primer == nullptr) {
-		respuesta = false;
-	}
-	else {
-		if (Primer == Ultimo) {
-			if (e == Primer->getElem()) {
-				delete Primer;
-				Primer = Ultimo = nullptr;
-			}
-			else {
-				respuesta = false;
-			}
+	while (actual) {
+		if (actual->getElem() == e) {
+			// Nodo a eliminar
+			if (actual == Primer) return EliminarPrincipio();
+			if (actual == Ultimo) return EliminarFinal();
+
+			// Nodo intermedio
+			Tripla<T>* ant = actual->getAnt();
+			Tripla<T>* sig = actual->getSig();
+
+			ant->setSig(sig);
+			sig->setAnt(ant);
+
+			delete actual;
+			size--;
+			return true;
 		}
-		else {
-			Tripla<T>* aux = Primer;
-			while (aux != Ultimo && aux->getElem() != e) {
-				aux = aux->getSig();
-			}
-			if (aux->getElem() == e) {
-				//Controlar si no es primero ni ultimo
-				if (aux->getAnt() == nullptr) {
-					EliminarPrincipio();
-				}
-				else {
-					if (aux->getSig() == nullptr) {
-						EliminarFinal();
-					}
-					else {//si esta en el medio se borra y el anterior le ponemos el valor del siguiente, y al diguiente del anterior
-						Tripla<T>* anterior = aux->getAnt();
-						Tripla<T>* siguiente = aux->getSig();
-						anterior->setSig(siguiente);
-						siguiente->setAnt(anterior);
-						delete aux;
-					}
-				}
-			}
-			else {
-				respuesta = false;
-			}
-		}
+		actual = actual->getSig();
 	}
-	return respuesta;
+
+	return false; // no encontrado
 }

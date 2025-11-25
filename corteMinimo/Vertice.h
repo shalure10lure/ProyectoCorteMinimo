@@ -18,9 +18,9 @@ public:
 	void mostrarAdyacentes();
 
 	T AdyacenteAleatorio();
-	vector<T>& getAdyacentes();
+	Lista8<T>& getLista();
 private:
-	vector<T> adyacentes;
+	Lista8<T> adyacentes;
 	T padre;
 };
 template<typename T>
@@ -64,10 +64,10 @@ inline T Vertice<T>::AdyacenteAleatorio()
 }
 
 template<typename T>
-inline vector<T>& Vertice<T>::getAdyacentes()
-{
+Lista8<T>& Vertice<T>::getLista() {
 	return adyacentes;
 }
+
 
 
 
