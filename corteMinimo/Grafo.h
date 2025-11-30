@@ -1,171 +1,250 @@
 ﻿#pragma once
-#include <iostream>
-#include <string>
-#include <fstream>
-#include <random> 
+#include "Vertice.h"
 #include <unordered_map>
 #include <vector>
+#include <string>
+#include <algorithm>
 #include <cstdlib>
 #include <ctime>
+#include <iostream>
+#include <fstream>
+#include <sstream>
 #include <cmath>
-#include "Vertice.h"
+#include <random>
+
+
 using namespace std;
 
 template <typename T>
-class Grafo
-{
-public:
-    Grafo();
-    ~Grafo();
-    void insertarArista(T Na, T Nb);
-    void mostrarGrafo();
-    void leerArchivo(string nomarchivo);
-    T elegirDeVector( vector<T>& vec);
-    void funcionazar();
-    int corteMinimoRapido();
-    int corteMinimoRepetido();
+struct Arista {
+    T u, v;
+    Arista(T _u, T _v) : u(_u), v(_v) {}
+};
 
+template <typename T>
+class Grafo {
 private:
-    unordered_map<T, Vertice<T>> vertices;
-    vector<T> vertices_disponibles;
+    unordered_map<T, Vertice<T>> G;
+    vector<Arista<T>> aristas_activas;
+
+    void actualizarAristas(T u_id, T v_id);
+    bool eliminarAristaO1(int indice);
+    void contraerVertices(T u_id, T v_id);
+
+public:
+    Grafo() { srand(time(NULL)); }
+
+    bool insertarArista(T u, T v);
+    void seleccionarAristaAleatoria(T& u, T& v);
+    int kargerContraccion();
+    int kargerMinCut();
+    void mostrarGrafo();
+    bool leerArchivo(string nombreArchivo);
+    size_t getNumeroVertices() const;
 };
 
 template<typename T>
-inline Grafo<T>::Grafo() {
-    srand(time(nullptr));
-}
+void Grafo<T>::actualizarAristas(T u_id, T v_id) {
+    // Itera sobre las aristas_activas y actualiza las que contienen a v_id
+    for (size_t i = 0; i < aristas_activas.size(); ) {
+        T& u_arista = aristas_activas[i].u;
+        T& v_arista = aristas_activas[i].v;
 
-template<typename T>
-inline Grafo<T>::~Grafo() {}
+        // 1. Actualizar el extremo v_id para que apunte al nuevo super-vértice u_id
+        if (u_arista == v_id) {
+            u_arista = u_id;
+        }
+        // Usar 'if' simple: Si la arista era (v, v), ambas se actualizarán a u, 
+        // lo que es correcto antes de la eliminación del autociclo.
+        // Mantenemos el 'if' simple como lo habías propuesto, pero aclaramos la lógica para la revisión de autociclos.
+        if (v_arista == v_id) {
+            v_arista = u_id;
+        }
 
-template<typename T>
-inline void Grafo<T>::insertarArista(T Na, T Nb) {
-    vertices[Na].insertarAdyacente(Nb);
-
-    if (find(vertices_disponibles.begin(), vertices_disponibles.end(), Na) == vertices_disponibles.end()) {
-        vertices_disponibles.push_back(Na);
+        // 2. Eliminar Auto-Ciclos (Aristas que ahora unen u_id consigo mismo)
+        if (u_arista == v_arista) {
+            // Se convierte en O(1) gracias a tu método eliminarAristaO1
+            eliminarAristaO1(i);
+            // ¡Importante! No incrementamos 'i' porque el elemento en la posición 'i'
+            // fue reemplazado por el último elemento de la lista.
+        }
+        else {
+            i++;
+        }
     }
 }
 
 template<typename T>
-inline void Grafo<T>::mostrarGrafo() {
-    if (vertices.empty()) {
+bool Grafo<T>::eliminarAristaO1(int indice) {
+    bool res = true;
+    if (indice < 0 || indice >= (int)aristas_activas.size()) {
+        res = false;
+    }
+    else {
+        if (indice != aristas_activas.size() - 1) {
+            swap(aristas_activas[indice], aristas_activas.back());
+        }
+        aristas_activas.pop_back();
+        res = true;
+    }
+    return res;
+}
+template<typename T>
+void Grafo<T>::contraerVertices(T u_id, T v_id) {
+    // 0. Si v_id no existe, o si u_id y v_id son el mismo (ya contraídos/autociclo), salimos.
+    if (G.find(v_id) == G.end() || u_id == v_id) return;
+
+    // El vértice u_id debe existir. Si no existe, el algoritmo fallará.
+    if (G.find(u_id) == G.end()) return;
+
+    // --- Contracción Lógica ---
+
+    // 1. Fusionar las listas de adyacencia (Mover adyacencias de v a u)
+    G[u_id].getLista().Merge(G[v_id].getLista());
+
+    // 2. Eliminar el vértice v del mapa G
+    G.erase(v_id);
+
+    // 3. Actualizar adyacencias en todo el grafo
+    // Todos los vértices que apuntaban a v_id ahora deben apuntar a u_id.
+    for (auto& par : G) {
+        // No es necesario revisar if (par.first != u_id) porque G[u_id] no se está
+        // reemplazando a sí mismo, y la lista de u_id se limpia en el paso 4.
+        par.second.getLista().Reemplazar(v_id, u_id);
+    }
+
+    // 4. Eliminar autociclos en la nueva lista de adyacencia de u
+    // Las aristas que eran (u, v) o (v, u) ahora son (u, u) en la lista de u.
+    G[u_id].getLista().EliminarOcurrencias(u_id);
+
+    // 5. Actualizar el contador de adyacentes del vértice contraído (u_id)
+        // (O(Longitud de lista))
+        // NOTA: Esta línea asume la existencia de G[u_id].setContAdy().
+    G[u_id].setContAdy(G[u_id].getLista().ContarElementos());
+}
+
+template<typename T>
+int Grafo<T>::kargerContraccion() {
+    // El algoritmo se ejecuta mientras haya más de dos vértices
+    while (G.size() > 2) {
+        T u, v;
+
+        // 1. Elegir uniformemente al azar una arista (u, v)
+        seleccionarAristaAleatoria(u, v);
+
+        // 2. Contrae v en u (convierte v en u)
+        // IMPORTANTE: Primero actualiza todas las referencias de las aristas
+        // para mantener la lista aristas_activas consistente.
+        actualizarAristas(u, v);
+
+        // 3. Contrae y fusiona el vértice v en u en la estructura del grafo.
+        contraerVertices(u, v);
+    }
+
+    // Retornar la cuenta del corte representado por los 2 vértices finales
+    // El tamaño final de aristas_activas (que ahora solo contiene aristas
+    // entre los dos super-vértices restantes) es el valor del corte.
+    return aristas_activas.size();
+}
+
+template<typename T>
+int Grafo<T>::kargerMinCut() {
+    int min_cut = -1;
+
+    // Obtener el número inicial de vértices (N)
+    int N = G.size();
+
+    // Si hay menos de 2 vértices, el corte es 0.
+    if (N < 2) return 0;
+
+
+    // Usamos std::max(2.0, (double)N) para evitar log(1) o log(0).
+    //int num_runs = (int)(N * N * std::log(std::max(2.0, (double)N)));
+    int num_runs = N * N;
+    // Para asegurar al menos un buen número de corridas si N es pequeño, N*N es un buen límite inferior.
+    // Usaremos la versión simple y robusta:
+
+    for (int i = 0; i < num_runs; ++i) {
+        // 1. Crear una copia profunda del grafo actual.
+        // **IMPORTANTE: Asume que se ha implementado el Constructor de Copia.**
+        Grafo<T> copia_grafo = *this;
+
+        // 2. Ejecutar la contracción en la copia.
+        int current_cut = copia_grafo.kargerContraccion();
+
+        // 3. Actualizar el corte mínimo.
+        if (min_cut == -1 || current_cut < min_cut) {
+            min_cut = current_cut;
+        }
+    }
+
+    return min_cut;
+}
+
+template<typename T>
+bool Grafo<T>::insertarArista(T u, T v) {
+    bool respuesta = false;
+    if (u == v) {
+        respuesta = false;
+    }
+    else {
+        if (G.find(u) == G.end()) G[u] = Vertice<T>();
+
+        G[u].getLista().InsertarFinal(v);
+
+        aristas_activas.push_back(Arista<T>(u, v));
+        respuesta = true;
+    }
+    return respuesta;
+}
+
+template<typename T>
+void Grafo<T>::seleccionarAristaAleatoria(T& u, T& v) {
+    if (!aristas_activas.empty()) {
+
+        // Reemplazo de rand(): generador moderno
+        static std::mt19937 rng(std::random_device{}());
+        std::uniform_int_distribution<int> dist(0, static_cast<int>(aristas_activas.size()) - 1);
+
+        int pos = dist(rng);   // índice aleatorio
+        u = aristas_activas[pos].u;
+        v = aristas_activas[pos].v;
+    }
+}
+
+template<typename T>
+void Grafo<T>::mostrarGrafo() {
+    if (G.empty()) {
         cout << "El grafo está vacío." << endl;
         return;
     }
-    for (auto& it : vertices) {
-        cout << it.first << " = ";
-        for (T u : it.second.getAdyacentes())
-            cout << u << " ";
-        cout << endl;
+    for (auto& par : G) {
+        cout << par.first << " = ";
+        par.second.getLista().Mostrar();
     }
 }
 
-template<typename T>
-inline void Grafo<T>::leerArchivo(string nomarchivo) {
-    ifstream archivo(nomarchivo);
-    if (!archivo) {
-        cout << "Error al abrir el archivo." << endl;
-    }
-    else {
-        T vertice;
+template <typename T>
+bool Grafo<T>::leerArchivo(string nombreArchivo) {
+    ifstream archivo(nombreArchivo);
+    string linea;
 
-        while (archivo >> vertice) {
-            T adyacente;
-            while (archivo >> adyacente && adyacente != T("-1")) {
-                insertarArista(vertice, adyacente);     
-            }
+    if (!archivo.is_open()) return false;
+
+    while (getline(archivo, linea)) {
+        stringstream ss(linea);
+        T u, v;
+        ss >> u;
+
+        while (ss >> v) {
+            if (v == "-1") break;
+            insertarArista(u, v);
         }
-        archivo.close();
-        cout << " Archivo abierto correctamente" << endl;
     }
+    return true;
 }
 
-template<typename T>
-T Grafo<T>::elegirDeVector( vector<T>& vec) {
-    T resultado = T();
-
-    if (!vec.empty()) {
-        static std::mt19937 rng(std::random_device{}());
-        std::uniform_int_distribution<int> dist(0, vec.size() - 1);
-        int  indice = dist(rng);
-        resultado = vec[indice];
-    }
-    return resultado;
-}
-
-template<typename T>
-inline void Grafo<T>::funcionazar()
-{
-    T v1 = elegirDeVector(vertices_disponibles);
-    T v2 = elegirDeVector(v1);
-    cout << "azar v1: " << v1 << " --> azar v2 : "<<endl;
-}
-
-template<typename T>
-int Grafo<T>::corteMinimoRapido() {
-    // --- 1️⃣ Copiamos el grafo original ---
-    unordered_map<T, Vertice<T>> copia_vertices = vertices;
-    vector<T> copia_lista = vertices_disponibles;
-    // --- 2️⃣ Mientras queden más de 2 vértices ---
-    while (copia_lista.size() > 2) {
-        // Elegir v1 aleatorio
-        T v1 = elegirDeVector(copia_lista);
-
-        auto& ady_v1 = copia_vertices[v1].getAdyacentes();
-        if (ady_v1.empty()) {
-            // v1 sin adyacentes, intentar otro vértice
-            continue;
-        }
-        // Elegir v2 aleatorio entre los adyacentes
-        T v2 = elegirDeVector(ady_v1);
-
-        if (v1 == v2 || copia_vertices.find(v2) == copia_vertices.end()) {
-            continue; // self-loop o v2 ya eliminado
-        }
-        // --- 3️⃣ CONTRACCIÓN: mover todos los adyacentes de v2 a v1 ---
-        auto& ady_v2 = copia_vertices[v2].getAdyacentes();
-        for (T vecino : ady_v2) {
-            if (vecino != v1) {
-                copia_vertices[v1].insertarAdyacente(vecino);
-            }
-        }
-        // --- 4️⃣ Reemplazar v2 por v1 en todos los adyacentes ---
-        for (auto& par : copia_vertices) {
-            auto& ady = par.second.getAdyacentes();
-            for (T& x : ady) {
-                if (x == v2) x = v1;
-            }
-        }
-        // --- 5️⃣ Eliminar self-loops de v1 ---
-        auto& ady_final_v1 = copia_vertices[v1].getAdyacentes();
-        ady_final_v1.erase(remove(ady_final_v1.begin(), ady_final_v1.end(), v1), ady_final_v1.end());
-        // --- 6️⃣ Eliminar v2 del grafo y de la lista ---
-        copia_vertices.erase(v2);
-        copia_lista.erase(remove(copia_lista.begin(), copia_lista.end(), v2), copia_lista.end());
-    }
-    T a = copia_lista[0];
-    T b = copia_lista[1];
-    // --- 8️⃣ Contar aristas entre los 2 vértices finales ---
-    int corte = 0;
-    for (T x : copia_vertices[a].getAdyacentes()) {
-        if (x == b) corte++;
-    }
-
-    return corte;
-}
-
-template<typename T>
-int Grafo<T>::corteMinimoRepetido() {
-    int N = vertices_disponibles.size();
-    int iter = max(30, (int)(N * N * log(max(2, N))));
-    int mejor = numeric_limits<int>::max();
-
-    for (int i = 0;i < iter;i++) {
-        int c = corteMinimoRapido();
-        if (c < mejor) {
-            mejor = c;
-        } 
-    }
-    return mejor;
+template <typename T>
+size_t Grafo<T>::getNumeroVertices() const {
+    return G.size();
 }

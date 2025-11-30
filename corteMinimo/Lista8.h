@@ -1,219 +1,307 @@
 #pragma once
-#include <iostream>
-#include <string>
-#include "Tripla.h"
-#include <cstdlib> 
-
-using namespace std;
+#include "tripla.h"
 
 template <typename T>
-class Lista8
-{
-public:
-	Lista8();
-	~Lista8();
-	bool InsertarPrincipio(T e);
-	bool InsertarFinal(T e);
-	bool EliminarPrincipio();
-	bool EliminarFinal();
-	void Mostrar();
-	bool BuscarRecursivo(T e, Tripla<T>* t);
-	bool buscarecursivoelemento(T e);
-	bool EliminarDado(T e);
-	Tripla<T>* sacarAdyacenteAleatorio();
-	int getSize();
-	Tripla<T>* getPrimer();
-
+class Lista8 {
 private:
-	Tripla<T>* Primer;
-	Tripla<T>* Ultimo;
-	int size;  
+    tripla<T>* Primer;
+    tripla<T>* Ultimo;
+
+public:
+    Lista8() {
+        Primer = nullptr;
+        Ultimo = nullptr;
+    }
+
+    // --- NUEVO: Destructor ---
+    // Necesario para liberar la memoria de los nodos al limpiar o destruir.
+    ~Lista8() {
+        tripla<T>* aux = Primer;
+        while (aux != nullptr) {
+            tripla<T>* siguiente = aux->getSig();
+            delete aux;
+            aux = siguiente;
+        }
+        Primer = Ultimo = nullptr;
+    }
+
+    // --- NUEVO: Constructor de Copia (Copia Profunda) ---
+    Lista8(const Lista8& otra) : Primer(nullptr), Ultimo(nullptr) {
+        tripla<T>* aux = otra.Primer;
+        while (aux != nullptr) {
+            // Usa InsertarFinal para crear NUEVOS nodos (copia profunda)
+            InsertarFinal(aux->getElem());
+            aux = aux->getSig();
+        }
+    }
+
+    // --- NUEVO: Operador de Asignación ---
+    Lista8& operator=(const Lista8& otra) {
+        if (this != &otra) {
+            // 1. Liberar los recursos de la lista actual (usando el destructor)
+            this->~Lista8();
+
+            // 2. Copiar los elementos de la otra lista
+            tripla<T>* aux = otra.Primer;
+            while (aux != nullptr) {
+                InsertarFinal(aux->getElem());
+                aux = aux->getSig();
+            }
+        }
+        return *this;
+    }
+    // Dentro de la clase Lista8<T>
+// TMerge() E O(1)
+    void Merge(Lista8<T>& otraLista) {
+        if (otraLista.Primer == nullptr) {
+            // La otra lista está vacía, no hay nada que hacer.
+            return;
+        }
+
+        if (this->Primer == nullptr) {
+            // La lista actual está vacía, simplemente adoptamos los punteros de la otra.
+            this->Primer = otraLista.Primer;
+            this->Ultimo = otraLista.Ultimo;
+        }
+        else {
+            // Conectamos el último nodo de la lista actual con el primer nodo de otraLista.
+            this->Ultimo->setSig(otraLista.Primer);
+            otraLista.Primer->setAnt(this->Ultimo);
+
+            // El último nodo de la lista actual pasa a ser el último de la otra lista.
+            this->Ultimo = otraLista.Ultimo;
+        }
+
+        // Desvinculamos la otra lista para evitar doble liberación de memoria (Double Free).
+        otraLista.Primer = nullptr;
+        otraLista.Ultimo = nullptr;
+    }
+
+    // Dentro de la clase Lista8<T>
+// TReemplazar(N) E O(N)
+    void Reemplazar(T valorAntiguo, T valorNuevo) {
+        tripla<T>* aux = Primer;
+        while (aux != nullptr) {
+            if (aux->getElem() == valorAntiguo) {
+                aux->setElem(valorNuevo);
+            }
+            aux = aux->getSig();
+        }
+    }
+
+    // Dentro de la clase Lista8<T>
+// TEliminarOcurrencias(N) E O(N)
+    void EliminarOcurrencias(T el) {
+        tripla<T>* aux = Primer;
+        while (aux != nullptr) {
+            if (aux->getElem() == el) {
+                // Guardamos el siguiente antes de eliminar el nodo actual
+                tripla<T>* sig = aux->getSig();
+
+                // Lógica de eliminación (casi idéntica a la de EliminarDado, pero sin buscar)
+                if (aux == Primer && aux == Ultimo) {
+                    // Caso: Único elemento
+                    delete aux;
+                    Primer = Ultimo = nullptr;
+                }
+                else if (aux == Primer) {
+                    // Caso: Primer elemento
+                    Primer = aux->getSig();
+                    Primer->setAnt(nullptr);
+                    delete aux;
+                }
+                else if (aux == Ultimo) {
+                    // Caso: Último elemento
+                    Ultimo = aux->getAnt();
+                    Ultimo->setSig(nullptr);
+                    delete aux;
+                }
+                else {
+                    // Caso: Elemento intermedio
+                    aux->getAnt()->setSig(aux->getSig());
+                    aux->getSig()->setAnt(aux->getAnt());
+                    delete aux;
+                }
+
+                // Pasamos al siguiente elemento
+                aux = sig;
+            }
+            else {
+                // El elemento no coincide, pasamos al siguiente
+                aux = aux->getSig();
+            }
+        }
+    }
+
+    // Dentro de la clase Lista8<T>
+// TContarElementos(N) E O(N)
+    int ContarElementos() {
+        int contador = 0;
+        tripla<T>* aux = Primer;
+        while (aux != nullptr) {
+            contador++;
+            aux = aux->getSig();
+        }
+        return contador;
+    }
+    // TInsertarPrincipio()<=1+2+1<=4 E O(1)
+    bool InsertarPrincipio(T el) {
+        bool resp = true;
+        if (Primer == nullptr) {
+            Primer = new tripla<T>(nullptr, el, nullptr);
+            Ultimo = Primer;
+        }
+        else {
+            Primer = new tripla<T>(nullptr, el, Primer);
+            Primer->getSig()->setAnt(Primer);
+        }
+        return resp;
+    }
+
+    // TInsertarFinal()<=1+3+1<=5 E O(1)
+    bool InsertarFinal(T el) {
+        bool resp = true;
+        if (Ultimo == nullptr) {
+            Ultimo = new tripla<T>(nullptr, el, nullptr);
+            Primer = Ultimo;
+        }
+        else {
+            tripla<T>* nuevo = new tripla<T>(Ultimo, el, nullptr);
+            Ultimo->setSig(nuevo);
+            Ultimo = nuevo;
+        }
+        return resp;
+    }
+
+    // TEliminarPrincipio()<= 1+1+1+1+1+1+1<=7 E O(1)
+    bool EliminarPrincipio() {
+        bool resp = false;
+        if (Primer == nullptr) {
+            cout << "Lista vacia" << endl;
+        }
+        else {
+            tripla<T>* temp = Primer;
+            Primer = Primer->getSig();
+            if (Primer != nullptr) Primer->setAnt(nullptr);
+            else Ultimo = nullptr;
+            delete temp;
+            resp = true;
+        }
+        return resp;
+    }
+
+    // TEliminarFinal()<=1+1+1+1+1+1+1<=7 E O(1)
+    bool EliminarFinal() {
+        bool resp = false;
+        if (Ultimo == nullptr) {
+            resp = false;
+        }
+        else {
+            tripla<T>* temp = Ultimo;
+            Ultimo = Ultimo->getAnt();
+
+            if (Ultimo != nullptr)
+                Ultimo->setSig(nullptr);
+            else
+                Primer = nullptr;
+
+            delete temp;
+            resp = true;
+        }
+        return resp;
+    }
+
+    // TMostrar(N)<= 1+N(2)+1<=2+2N
+    //N=aux es la cantidad de nodos en la lista
+    void Mostrar() {
+        tripla<T>* aux = Primer;
+        while (aux != nullptr) {
+            cout << aux->getElem() << " <-> ";
+            aux = aux->getSig();
+        }
+        cout << "NULL" << endl;
+    }
+
+    // TBuscarSecuencial(N)<=1+1+N(1+1)+1<=3+2N E O(N)
+    //N=aux es la cantidad de nodos en la lista
+    bool BuscarSecuencial(T el) {
+        bool resp = false;
+        tripla<T>* aux = Primer;
+        while (aux != nullptr) {
+            if (aux->getElem() == el) {
+                resp = true;
+            }
+            aux = aux->getSig();
+        }
+        return resp;
+    }
+
+    // TBuscarRecursivo(N) E O(N)
+    //N= es la cantidad de nodos en la lista
+    bool BuscarRecursivo(T el, tripla<T>* Tnodo) {
+        bool resp;
+        if (Tnodo == nullptr) {
+            resp = false;
+        }
+        else if (el == Tnodo->getElem()) {
+            resp = true;
+        }
+        else {
+            resp = BuscarRecursivo(el, Tnodo->getSig());
+        }
+        return resp;
+    }
+
+    tripla<T>* getPrimer() {
+        return Primer;
+    }
+
+    // TEliminarDad(N) E O(N)
+    //N= numero de nodos en la lista
+    bool EliminarDado(T el) {
+        bool resp = true;
+
+        if (Primer == nullptr) {
+            resp = false;
+        }
+        else {
+            if (Primer == Ultimo) {
+                if (Primer->getElem() == el) {
+                    delete Primer;
+                    Primer = Ultimo = nullptr;
+
+                }
+                else {
+                    resp = false;
+                }
+            }
+            else {
+                tripla<T>* aux = Primer;
+                while (aux != nullptr && aux->getElem() != el) {
+                    aux = aux->getSig();
+                }
+
+                if (aux->getElem() == el) {
+                    if (aux == Primer) {
+                        resp = EliminarPrincipio();
+                    }
+                    else if (aux == Ultimo) {
+                        resp = EliminarFinal();
+                    }
+                    else {
+                        tripla<T>* anterior = aux->getAnt();
+                        tripla<T>* siguiente = aux->getSig();
+                        anterior->setSig(siguiente);
+                        siguiente->setAnt(anterior);
+
+                        delete aux;
+                        resp = true;
+                    }
+                }
+            }
+        }
+
+        return resp;
+    }
+
 };
-
-template<typename T>
-inline Lista8<T>::Lista8()
-{
-	Primer = nullptr;
-	Ultimo = nullptr;
-	size = 0;
-}
-
-template<typename T>
-inline Lista8<T>::~Lista8()
-{
-	while (Primer != nullptr) {
-		EliminarPrincipio();
-	}
-}
-
-template<typename T>
-inline bool Lista8<T>::InsertarPrincipio(T e)
-{
-	bool resultado = true;
-	if (Primer == nullptr) {
-		Primer = new Tripla<T>(nullptr, e, nullptr);
-		Ultimo = Primer;
-	}
-	else {
-		Primer = new Tripla<T>(nullptr, e,Primer);
-		Primer->getSig()->setAnt(Primer);
-	}
-	size++;
-	return resultado;
-}
-
-template<typename T>
-inline bool Lista8<T>::InsertarFinal(T e)
-{
-	bool resultado = true;
-	if (Primer == nullptr) {
-		Primer = new Tripla<T>(nullptr, e, nullptr);
-		Ultimo = Primer;
-	}
-	else {
-		Ultimo = new Tripla<T>(Ultimo, e,nullptr);
-		Ultimo->getAnt()->setSig(Ultimo);
-	}
-	size++;
-	return resultado;
-
-}
-
-template<typename T>
-inline bool Lista8<T>::EliminarPrincipio()
-{
-	if (Primer == nullptr) {
-		return false; // lista vacía
-	}
-
-	Tripla<T>* aEliminar = Primer;
-
-	if (Primer == Ultimo) {
-		// Solo hay un nodo
-		Primer = Ultimo = nullptr;
-	}
-	else {
-		// Más de un nodo
-		Primer = Primer->getSig();
-		Primer->setAnt(nullptr);
-	}
-
-	delete aEliminar;
-	size--;
-	return true;
-}
-
-template<typename T>
-inline bool Lista8<T>::EliminarFinal()
-{
-	if (Ultimo == nullptr) return false; // lista vacía
-
-	Tripla<T>* aEliminar = Ultimo;
-
-	if (Primer == Ultimo) {
-		// Solo hay un nodo
-		Primer = Ultimo = nullptr;
-	}
-	else {
-		Ultimo = Ultimo->getAnt();
-		Ultimo->setSig(nullptr);
-	}
-
-	delete aEliminar;
-	size--;
-	return true;
-}
-
-
-template<typename T>
-inline void Lista8<T>::Mostrar()
-{
-	if (Primer == nullptr) {
-		cout << "Lista vacia" << endl;
-	}
-	else {
-		Tripla<T>* actual = Primer;
-		while (actual != nullptr) {
-			string letra = actual->getElem();
-			cout << "(" << letra << ") " ;
-			actual = actual->getSig();
-		}
-		cout << endl;
-	}
-}
-
-template<typename T>
-inline bool Lista8<T>::BuscarRecursivo(T e, Tripla<T>* t)
-{
-	bool respuesta = true;
-	if (t == nullptr) {
-		respuesta = false;
-	}
-	else {
-		if (e == t->getElem()) {
-			respuesta = true;
-		}
-		else {
-			respuesta = BuscarRecursivo(e, t->getSig());
-		}
-	}
-	return respuesta;
-}
-
-template<typename T>
-inline bool Lista8<T>::buscarecursivoelemento(T e)
-{
-	return BuscarRecursivo(e, Primer);
-}
-
-template<typename T>
-inline Tripla<T>* Lista8<T>::sacarAdyacenteAleatorio()
-{
-	Tripla<T>* actual = Primer;
-	if (size != 0) {
-		int indice = rand() % size;
-		for (int i = 0;i < indice;i++) {
-			actual = actual->getSig();
-		}
-	}
-	return actual;
-}
-
-
-template<typename T>
-inline int Lista8<T>::getSize()
-{
-	return size;
-}
-template<typename T>
-Tripla<T>* Lista8<T>::getPrimer() {
-	return Primer;
-}
-
-template<typename T>
-inline bool Lista8<T>::EliminarDado(T e)
-{
-	Tripla<T>* actual = Primer;
-
-	while (actual) {
-		if (actual->getElem() == e) {
-			// Nodo a eliminar
-			if (actual == Primer) return EliminarPrincipio();
-			if (actual == Ultimo) return EliminarFinal();
-
-			// Nodo intermedio
-			Tripla<T>* ant = actual->getAnt();
-			Tripla<T>* sig = actual->getSig();
-
-			ant->setSig(sig);
-			sig->setAnt(ant);
-
-			delete actual;
-			size--;
-			return true;
-		}
-		actual = actual->getSig();
-	}
-
-	return false; // no encontrado
-}

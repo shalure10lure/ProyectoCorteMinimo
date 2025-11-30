@@ -1,82 +1,26 @@
 #pragma once
 #include <iostream>
-#include <string>
 using namespace std;
 
 template <typename T>
-class Tripla
-{
-public:
-	Tripla();
-	Tripla(Tripla* a, T e, Tripla* s);
-	~Tripla();
-	Tripla* getSig();
-	Tripla* getAnt();
-	T getElem();
-	void setElem(T e);
-	void setSig(Tripla* s);
-	void setAnt(Tripla* a);
-
+class tripla {
 private:
-	Tripla* sig;
-	Tripla* ant;
-	T elem;
+    tripla<T>* SIG;
+    tripla<T>* ANT;
+    T elem;
+
+public:
+    tripla(tripla<T>* a, T e, tripla<T>* s) {
+        ANT = a;
+        elem = e;
+        SIG = s;
+    }
+
+    tripla<T>* getSig() { return SIG; }
+    tripla<T>* getAnt() { return ANT; }
+    T getElem() { return elem; }
+
+    void setSig(tripla<T>* s) { SIG = s; }
+    void setAnt(tripla<T>* a) { ANT = a; }
+    void setElem(T e) { elem = e; }
 };
-
-template<typename T>
-inline Tripla<T>::Tripla()
-{
-	sig = nullptr;
-	ant = nullptr;
-}
-
-template<typename T>
-inline Tripla<T>::Tripla(Tripla* a, T e, Tripla* s)
-{
-	ant = a;
-	elem = e;
-	sig = s;
-}
-
-template<typename T>
-inline Tripla<T>::~Tripla()
-{
-	sig = nullptr;
-	ant = nullptr;
-}
-
-template<typename T>
-inline Tripla<T>* Tripla<T>::getSig()
-{
-	return sig;
-}
-
-template<typename T>
-inline Tripla<T>* Tripla<T>::getAnt()
-{
-	return ant;
-}
-
-template<typename T>
-inline T Tripla<T>::getElem()
-{
-	return elem;
-}
-
-template<typename T>
-inline void Tripla<T>::setElem(T e)
-{
-	elem = e;
-}
-
-template<typename T>
-inline void Tripla<T>::setSig(Tripla* s)
-{
-	sig = s;
-}
-
-template<typename T>
-inline void Tripla<T>::setAnt(Tripla* a)
-{
-	ant = a;
-}

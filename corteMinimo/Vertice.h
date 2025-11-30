@@ -1,60 +1,38 @@
 #pragma once
-#include <iostream>
-#include <string>
 #include "Lista8.h"
 
-using namespace std;
-
 template <typename T>
-class Vertice
-{
-public:
-	Vertice();
-	~Vertice();
-
-	void insertarAdyacente(T elemento);
-	void mostrarAdyacentes();
-
-	T AdyacenteAleatorio();
-	vector<T>& getAdyacentes();
+class Vertice {
 private:
-	vector<T> adyacentes;
+    Lista8<T> lista; // Lista de adyacencia o elementos del vertice
+    int contAdy;     // Contador de adyacentes
+
+public:
+    Vertice() { contAdy = 0; }
+
+    // --- NUEVO: Constructor de Copia ---
+    Vertice(const Vertice& otro)
+        // Llama implícitamente al constructor de copia de Lista8 para 'lista'.
+        // Copia superficial de 'contAdy' (que es un entero).
+        : lista(otro.lista), contAdy(otro.contAdy) {
+    }
+
+    // --- NUEVO: Operador de Asignación ---
+    Vertice& operator=(const Vertice& otro) {
+        if (this != &otro) {
+            // Llama al operador de asignación de Lista8 (copia profunda)
+            lista = otro.lista;
+            contAdy = otro.contAdy;
+        }
+        return *this;
+    }
+
+    void setContAdy(int c) { contAdy = c; }
+    int getContAdy() const { return contAdy; }
+
+    Lista8<T>& getLista() { return lista; }
+
 };
-template<typename T>
-Vertice<T>::Vertice()
-{}
-
-template<typename T>
-Vertice<T>::~Vertice()
-{}
-
-
-
-template<typename T>
-inline void Vertice<T>::insertarAdyacente(T elemento)
-{
-	adyacentes.push_back(elemento);
-}
-
-template<typename T>
-inline void Vertice<T>::mostrarAdyacentes()
-{
-	for (T v : adyacentes) cout << v << " ";
-	cout << endl;
-}
-
-template<typename T>
-inline T Vertice<T>::AdyacenteAleatorio()
-{
-	if (adyacentes.empty()) return T();
-	return adyacentes[rand() % adyacentes.size()];
-}
-
-template<typename T>
-inline vector<T>& Vertice<T>::getAdyacentes()
-{
-	return adyacentes;
-}
 
 
 
