@@ -7,7 +7,7 @@ using namespace chrono;
 int main() {
     Grafo<string> g;
 
-    g.leerArchivo("grafo.txt");
+    g.leerArchivo("grande.txt");
     g.mostrarGrafo();
 
     auto inicio = high_resolution_clock::now();  // tiempo inicial
@@ -19,7 +19,7 @@ int main() {
     // Diferencia en milisegundos
     auto duracion = duration_cast<milliseconds>(fin - inicio).count();
 
-    cout << "Corte mínimo entre " << resultado<< " aristas" << endl;
+    cout << "Corte mínimo  " << resultado<< " aristas" << endl;
     cout << "Tiempo de ejecución: " << duracion << " ms" << endl;
     
     return 0;
