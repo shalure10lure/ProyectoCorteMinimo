@@ -123,7 +123,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="corteMinimo.cpp" />
+    <ClCompile Include="main.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Grafo.h" />
@@ -132,7 +132,8 @@
     <ClInclude Include="Vertice.h" />
   </ItemGroup>
   <ItemGroup>
-    <None Include=".gitignore" />
+    <Text Include="grafo.txt" />
+    <Text Include="grande.txt" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

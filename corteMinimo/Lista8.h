@@ -2,6 +2,7 @@
 #include <iostream>
 #include <string>
 #include "Tripla.h"
+#include <cstdlib> 
 
 using namespace std;
 
@@ -18,21 +19,23 @@ public:
 	void Mostrar();
 	bool BuscarRecursivo(T e, Tripla<T>* t);
 	bool buscarecursivoelemento(T e);
-
-	Tripla<T>* SacarSiguienteAdyacente(Tripla<T>* actual);
+	bool EliminarDado(T e);
+	Tripla<T>* sacarAdyacenteAleatorio();
+	int getSize();
 	Tripla<T>* getPrimer();
+
 private:
 	Tripla<T>* Primer;
 	Tripla<T>* Ultimo;
+	int size;  
 };
-
-
 
 template<typename T>
 inline Lista8<T>::Lista8()
 {
 	Primer = nullptr;
 	Ultimo = nullptr;
+	size = 0;
 }
 
 template<typename T>
@@ -47,7 +50,7 @@ template<typename T>
 inline bool Lista8<T>::InsertarPrincipio(T e)
 {
 	bool resultado = true;
-	if (Primer == nullptr) {// verifica si la lista esta vacia
+	if (Primer == nullptr) {
 		Primer = new Tripla<T>(nullptr, e, nullptr);
 		Ultimo = Primer;
 	}
@@ -55,6 +58,7 @@ inline bool Lista8<T>::InsertarPrincipio(T e)
 		Primer = new Tripla<T>(nullptr, e,Primer);
 		Primer->getSig()->setAnt(Primer);
 	}
+	size++;
 	return resultado;
 }
 
@@ -70,6 +74,7 @@ inline bool Lista8<T>::InsertarFinal(T e)
 		Ultimo = new Tripla<T>(Ultimo, e,nullptr);
 		Ultimo->getAnt()->setSig(Ultimo);
 	}
+	size++;
 	return resultado;
 
 }
@@ -77,44 +82,48 @@ inline bool Lista8<T>::InsertarFinal(T e)
 template<typename T>
 inline bool Lista8<T>::EliminarPrincipio()
 {
-	bool resultado = true;
-	if (Primer == nullptr) {// lista vacia
-		resultado = false;
+	if (Primer == nullptr) {
+		return false; // lista vacía
+	}
+
+	Tripla<T>* aEliminar = Primer;
+
+	if (Primer == Ultimo) {
+		// Solo hay un nodo
+		Primer = Ultimo = nullptr;
 	}
 	else {
-		if (Primer == Ultimo) { //verifica si hay un elemento 
-			delete Primer;
-			Primer = Ultimo = nullptr;
-		}
-		else {
-			Primer = Primer->getSig();
-			delete Primer->getAnt();
-			Primer->setAnt(nullptr);
-		}
+		// Más de un nodo
+		Primer = Primer->getSig();
+		Primer->setAnt(nullptr);
 	}
-	return resultado;
+
+	delete aEliminar;
+	size--;
+	return true;
 }
 
 template<typename T>
 inline bool Lista8<T>::EliminarFinal()
 {
-	bool resultado = true;
-	if (Ultimo == nullptr) {
-		resultado = false; // lista vacía
+	if (Ultimo == nullptr) return false; // lista vacía
+
+	Tripla<T>* aEliminar = Ultimo;
+
+	if (Primer == Ultimo) {
+		// Solo hay un nodo
+		Primer = Ultimo = nullptr;
 	}
 	else {
-		if (Primer == Ultimo) {
-			delete Ultimo;
-			Primer = Ultimo = nullptr;
-		}
-		else {
-			Ultimo = Ultimo->getAnt();
-			delete Ultimo->getSig();
-			Ultimo->setSig(nullptr);
-		}
+		Ultimo = Ultimo->getAnt();
+		Ultimo->setSig(nullptr);
 	}
-	return resultado;
+
+	delete aEliminar;
+	size--;
+	return true;
 }
+
 
 template<typename T>
 inline void Lista8<T>::Mostrar()
@@ -126,7 +135,7 @@ inline void Lista8<T>::Mostrar()
 		Tripla<T>* actual = Primer;
 		while (actual != nullptr) {
 			string letra = actual->getElem();
-			cout << "(" << letra << ", " << actual->getPeso() << ") ";
+			cout << "(" << letra << ") " ;
 			actual = actual->getSig();
 		}
 		cout << endl;
@@ -158,20 +167,53 @@ inline bool Lista8<T>::buscarecursivoelemento(T e)
 }
 
 template<typename T>
-inline Tripla<T>* Lista8<T>::SacarSiguienteAdyacente(Tripla<T>* actual)
+inline Tripla<T>* Lista8<T>::sacarAdyacenteAleatorio()
 {
-	Tripla<T>* res = actual;
-	if (res == nullptr) {
-		res = nullptr;
+	Tripla<T>* actual = Primer;
+	if (size != 0) {
+		int indice = rand() % size;
+		for (int i = 0;i < indice;i++) {
+			actual = actual->getSig();
+		}
 	}
-	else {
-		res = res->getSig();
-	}
-	return res;
+	return actual;
+}
+
+
+template<typename T>
+inline int Lista8<T>::getSize()
+{
+	return size;
+}
+template<typename T>
+Tripla<T>* Lista8<T>::getPrimer() {
+	return Primer;
 }
 
 template<typename T>
-inline Tripla<T>* Lista8<T>::getPrimer()
+inline bool Lista8<T>::EliminarDado(T e)
 {
-	return Primer;
+	Tripla<T>* actual = Primer;
+
+	while (actual) {
+		if (actual->getElem() == e) {
+			// Nodo a eliminar
+			if (actual == Primer) return EliminarPrincipio();
+			if (actual == Ultimo) return EliminarFinal();
+
+			// Nodo intermedio
+			Tripla<T>* ant = actual->getAnt();
+			Tripla<T>* sig = actual->getSig();
+
+			ant->setSig(sig);
+			sig->setAnt(ant);
+
+			delete actual;
+			size--;
+			return true;
+		}
+		actual = actual->getSig();
+	}
+
+	return false; // no encontrado
 }

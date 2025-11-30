@@ -13,6 +13,7 @@ public:
 	Tripla* getSig();
 	Tripla* getAnt();
 	T getElem();
+	void setElem(T e);
 	void setSig(Tripla* s);
 	void setAnt(Tripla* a);
 
@@ -60,6 +61,12 @@ template<typename T>
 inline T Tripla<T>::getElem()
 {
 	return elem;
+}
+
+template<typename T>
+inline void Tripla<T>::setElem(T e)
+{
+	elem = e;
 }
 
 template<typename T>
