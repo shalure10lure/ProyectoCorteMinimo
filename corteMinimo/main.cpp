@@ -7,7 +7,7 @@ using namespace chrono;
 int main() {
     Grafo<string> g;
 
-    g.leerArchivo("grande.txt");
+    g.leerArchivo("grafo.txt");
     g.mostrarGrafo();
 
     auto inicio = high_resolution_clock::now();  // tiempo inicial
