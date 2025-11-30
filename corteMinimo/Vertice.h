@@ -22,11 +22,13 @@ private:
 };
 template<typename T>
 Vertice<T>::Vertice()
-{}
+{
+}
 
 template<typename T>
 Vertice<T>::~Vertice()
-{}
+{
+}
 
 
 

@@ -27,7 +27,7 @@ public:
 private:
 	Tripla<T>* Primer;
 	Tripla<T>* Ultimo;
-	int size;  
+	int size;
 };
 
 template<typename T>
@@ -55,7 +55,7 @@ inline bool Lista8<T>::InsertarPrincipio(T e)
 		Ultimo = Primer;
 	}
 	else {
-		Primer = new Tripla<T>(nullptr, e,Primer);
+		Primer = new Tripla<T>(nullptr, e, Primer);
 		Primer->getSig()->setAnt(Primer);
 	}
 	size++;
@@ -71,7 +71,7 @@ inline bool Lista8<T>::InsertarFinal(T e)
 		Ultimo = Primer;
 	}
 	else {
-		Ultimo = new Tripla<T>(Ultimo, e,nullptr);
+		Ultimo = new Tripla<T>(Ultimo, e, nullptr);
 		Ultimo->getAnt()->setSig(Ultimo);
 	}
 	size++;
@@ -135,7 +135,7 @@ inline void Lista8<T>::Mostrar()
 		Tripla<T>* actual = Primer;
 		while (actual != nullptr) {
 			string letra = actual->getElem();
-			cout << "(" << letra << ") " ;
+			cout << "(" << letra << ") ";
 			actual = actual->getSig();
 		}
 		cout << endl;
@@ -172,7 +172,7 @@ inline Tripla<T>* Lista8<T>::sacarAdyacenteAleatorio()
 	Tripla<T>* actual = Primer;
 	if (size != 0) {
 		int indice = rand() % size;
-		for (int i = 0;i < indice;i++) {
+		for (int i = 0; i < indice; i++) {
 			actual = actual->getSig();
 		}
 	}
