@@ -26,7 +26,7 @@ public:
     int corteMinimoRepetido();
 
 private:
-    unordered_map<T, Vertice<T>> vertices;
+    unordered_map<T, Vertice<T>> G;
     vector<T> vertices_disponibles;
 };
 
@@ -40,7 +40,7 @@ inline Grafo<T>::~Grafo() {}
 
 template<typename T>
 inline void Grafo<T>::insertarArista(T Na, T Nb) {
-    vertices[Na].insertarAdyacente(Nb);
+    G[Na].insertarAdyacente(Nb);
 
     if (find(vertices_disponibles.begin(), vertices_disponibles.end(), Na) == vertices_disponibles.end()) {
         vertices_disponibles.push_back(Na);
@@ -49,11 +49,11 @@ inline void Grafo<T>::insertarArista(T Na, T Nb) {
 
 template<typename T>
 inline void Grafo<T>::mostrarGrafo() {
-    if (vertices.empty()) {
-        cout << "El grafo está vacío." << endl;
+    if (G.empty()) {
+        cout << "El grafo esta vacio." << endl;
         return;
     }
-    for (auto& it : vertices) {
+    for (auto& it : G) {
         cout << it.first << " = ";
         for (T u : it.second.getAdyacentes())
             cout << u << " ";
@@ -105,7 +105,7 @@ inline void Grafo<T>::funcionazar()
 template<typename T>
 int Grafo<T>::corteMinimoRapido() {
     // --- 1️⃣ Copiamos el grafo original ---
-    unordered_map<T, Vertice<T>> copia_vertices = vertices;
+    unordered_map<T, Vertice<T>> copia_vertices = G;
     vector<T> copia_lista = vertices_disponibles;
     // --- 2️⃣ Mientras queden más de 2 vértices ---
     while (copia_lista.size() > 2) {
